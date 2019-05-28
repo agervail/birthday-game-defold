@@ -1,0 +1,22 @@
+ts = 16
+
+function find_move(self, p)
+	local dist = vmath.length_sqr(p - self.goal)
+	local reached_goal = dist <= 0.5
+
+	if reached_goal or self.dir == nil then
+		self.i_mov = self.i_mov + 1
+		if self.i_mov > table.getn(self.moves) then
+			self.move = false
+			msg.post("#sprite", "play_animation", { id = hash("idle") })
+			msg.post("/level_screen", "end_of_animation")
+		else
+			self.goal = vmath.vector3(self.moves[self.i_mov][1]*ts, self.moves[self.i_mov][2]*ts, 0)
+			self.dir = vmath.normalize(self.goal - p)
+		end
+	end
+end
+
+function on_timer_move(self, handle)
+	self.move = true
+end

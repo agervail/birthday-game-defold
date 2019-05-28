@@ -1,0 +1,50 @@
+local speed = 60
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	self.start_pos = {15, 42}
+	self.moves = {{15, 41}, {12, 41}}
+	self.dir = nil
+	self.current_anim = nil
+	self.move = false
+	self.i_mov = 0
+	self.goal = vmath.vector3(self.moves[1][1]*ts, self.moves[1][1]*ts, 0)
+	go.set_position(vmath.vector3(self.start_pos[1]*ts, self.start_pos[2]*ts, 0))
+end
+
+function update(self, dt)
+	if self.move then
+		local p = go.get_position()
+		find_move(self, p)
+		go.set_position(p + self.dir * speed * dt)
+
+		local anim = hash("idle")
+
+		if self.dir.x > 0.1 then
+			anim = hash("right")
+		elseif self.dir.x < -0.1 then
+			anim = hash("left")
+		elseif self.dir.y > 0.1 then
+			anim = hash("up")
+		elseif self.dir.y < -0.1 then
+			anim = hash("down")
+		end
+
+		if anim ~= self.current_anim then
+			msg.post("#sprite", "play_animation", { id = anim })
+			self.current_anim = anim
+		end
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("move_level_antoine_1") then
+		msg.post(".", "enable")
+		local splash_timer = timer.delay(0.1, false, on_timer_move)
+	end
+end
+
+function on_reload(self)
+	-- Add reload-handling code here
+	-- Remove this function if not needed
+end

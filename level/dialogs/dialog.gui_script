@@ -1,0 +1,39 @@
+local t_txt = 3
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	msg.post("#", "hide_dialog")
+	self.active = false
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("show_dialog") then
+		msg.post(".", "enable")
+		self.messages = message.msg
+		write_messages(self)
+		self.active = true
+	elseif message_id == hash("hide_dialog") then
+		print("disable dialog")
+		msg.post(".", "disable")
+		self.active = false
+	end
+end
+
+function write_messages(self)
+	self.msg_count = 1
+	local t = gui.get_node("text")
+	gui.set_text(t, self.messages[self.msg_count])
+	local splash_timer = timer.delay(t_txt, false, on_message_over)
+end
+
+function on_message_over(self, handle)
+	self.msg_count = self.msg_count + 1
+	if self.msg_count > table.getn(self.messages) then
+		msg.post("/level_screen", "dialog_over")
+		msg.post("#", "hide_dialog")
+	else
+		local t = gui.get_node("text")
+		gui.set_text(t, self.messages[self.msg_count])
+		local splash_timer = timer.delay(t_txt, false, on_message_over)
+	end
+end

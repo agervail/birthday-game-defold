@@ -1,0 +1,78 @@
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	msg.post("#", "hide_level_select")
+	self.active = false
+	self.nb_end_of_anim = 0
+	self.state = 0
+end
+
+function update(self, dt)
+	if self.active then
+		if self.state == 0 then -- HIDDEN
+			print("STATE : 0")
+		elseif self.state == 1 then -- START 1
+			print("STATE : 1")
+			msg.post(".", "enable")
+			self.active = true
+			msg.post("/level_jenn", "move_level_jenn_1")
+			msg.post("/level_antoine", "move_level_antoine_1")
+			self.state = 2
+		elseif self.state == 2 then -- MOVING 1
+			if self.nb_end_of_anim == 2 then
+				self.nb_end_of_anim = 0
+				self.state = 3
+			end
+		elseif self.state == 3 then -- TALK 1
+			print("STATE : 2")
+			self.msg = {"A : Oh mais elle est en première caté elle... olbigé !!",
+						"J : On ne se serait pas déjà vu ?",
+						"A : HE ! Mais rends moi ma chaussure !!"}
+			msg.post("/dialog", "show_dialog", {msg = self.msg})
+			self.dialog_over = false
+			self.state = 4
+		elseif self.state == 4 then -- TALKING 1
+			if self.dialog_over then
+				print("dialog_over")
+			end
+		end
+
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("begin_level_select") then
+		msg.post("#", "show_level_select")
+		self.active = true
+		self.state = 1
+	elseif message_id == hash("hide_level_select") then
+		msg.post(".", "disable")
+		msg.post("/level_jenn", "disable")
+		msg.post("/level_antoine", "disable")
+		self.active = false
+	elseif message_id == hash("end_of_animation") then
+		self.nb_end_of_anim = self.nb_end_of_anim + 1
+	elseif message_id == hash("dialog_over") then
+		self.dialog_over = true
+	end
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.pressed and self.active then
+		print("Touch!")
+		print(dump(action))
+	end
+end
+
+function dump(o)
+	if type(o) == 'table' then
+		local s = '{ '
+		for k,v in pairs(o) do
+			if type(k) ~= 'number' then k = '"'..k..'"' end
+			s = s .. '['..k..'] = ' .. dump(v) .. ','
+		end
+		return s .. '} '
+	else
+		return tostring(o)
+	end
+end
